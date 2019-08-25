@@ -7,5 +7,5 @@ The Control System irrigation operates based solely on time.
 The Experiment Systems irrigation operates based on reading obtained from
 10 moisture sensors attached to the system.
 
-It also has sketches to calibrate and test installed moisture sensors and Real time clock
+It also has sketches to calibrate and test installed moisture sensors, flow meter, and real time clock
 module.
