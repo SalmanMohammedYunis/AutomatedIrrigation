@@ -70,22 +70,23 @@ int i;  // iterator
 /* Select the System by uncommenting the system you are uploading the sketch to, Comment the rest */
 
 /* SYSTEM A */
-//const int critical_low_treshold = 452;                   // Moisture level to triger frequent measurements:SYSTEM A
-//const int critical_high_treshold = 509;                 // Moisture level treshold to open valve : SYSTEM A
+//const int critical_low_treshold = 350;                   // Moisture level to triger frequent measurements:SYSTEM A
+//const int critical_high_treshold = 350;                 // Moisture level treshold to open valve : SYSTEM A
 
 /* SYSTEM B */
-const int critical_low_treshold = 401;                   // Moisture level to triger frequent measurements: SYSTEM B
-const int critical_high_treshold = 456;                 // Moisture level treshold to open valve:SYSTEM B
+const int critical_low_treshold = 350;                   // Moisture level to triger frequent measurements: SYSTEM B
+const int critical_high_treshold = 350;                 // Moisture level treshold to open valve:SYSTEM B
 
 /* SYSTEM C */
-//const int critical_low_treshold = 344;                   // Moisture level to triger frequent measurements : SYSTEM C
-//const int critical_high_treshold = 402;                 // Moisture level treshold to open valve :SYSTEM C
+//const int critical_low_treshold = 350;                   // Moisture level to triger frequent measurements : SYSTEM C
+//const int critical_high_treshold = 350;                 // Moisture level treshold to open valve :SYSTEM C
 
 /**************************************************************************************************/
 
 
-const unsigned long long_measure_interval_ms = 7200000;    //2 hour interval
-const unsigned long freq_measure_interval_ms = 1200000;   //20 min interval
+const unsigned long long_measure_interval_ms = 259200000;    //3 days interval
+const unsigned long freq_measure_interval_ms = 300000;   //5 min interval
+const unsigned long one_hour_interval_ms = 3600000;   //5 min interval
 
 const int valid_moisture_bounds[2] = {250,600};         // Upper and lower bounds for valid moisture readings
 
@@ -160,11 +161,16 @@ void loop() {
     #ifdef debug
     Serial.println("Checking Moisture ...");
     #endif
-
-    delay(long_measure_interval_ms);
-
+    int long_measure_interval_hrs = long_measure_interval_ms / (1000*60*60); //convert long interval ms to hrs
+    
     sen_read_count = MOS_SEN_COUNT;
-    for(i = 0;i < MOS_SEN_COUNT;i++){
+
+    for(i = 0;i<long_measure_interval_hrs;i++){
+      /*
+      This loop writes the sensor values to a memory each hour 
+      */
+      delay(one_hour_interval_ms);
+      for(i = 0;i < MOS_SEN_COUNT;i++){
       if(read_moisture(i) < valid_moisture_bounds[0] || read_moisture(i) > valid_moisture_bounds[1]){
         moisture_readings[i] = 0;
         sensor_err_flags[i] = false;
@@ -175,8 +181,9 @@ void loop() {
         sensor_err_flags[i] = true;
       } 
     }
-
-    log_soil_SD(rtc.now(),moisture_readings,sensor_err_flags);
+      log_soil_str_SD("Hourly: ");
+      log_soil_SD(rtc.now(),moisture_readings,sensor_err_flags);
+    }
 
   }
   while(compute_average(moisture_readings,MOS_SEN_COUNT,sen_read_count) < critical_high_treshold);
